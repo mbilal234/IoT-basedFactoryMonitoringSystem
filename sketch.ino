@@ -6,8 +6,8 @@
 #include <Adafruit_Sensor.h>
 
 // WiFi Credentials
-const char* ssid = "Your_SSID";
-const char* password = "Your_PASSWORD";
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
 
 // DHT22 Sensor
 #define DHTPIN 4
@@ -21,7 +21,7 @@ Adafruit_MPU6050 mpu;
 #define PIR_PIN 13
 
 // Server endpoint
-const char* serverUrl = "http://your-cloud-endpoint";
+const char* serverUrl = "192.168.1.1";
 
 void setup() {
   Serial.begin(115200);
