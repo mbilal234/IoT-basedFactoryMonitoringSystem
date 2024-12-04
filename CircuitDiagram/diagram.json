@@ -1,0 +1,15 @@
+{
+    "version": 1,
+    "author": "Muhammad Bilal",
+    "editor": "wokwi",
+    "parts": [
+      { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+      { "type": "wokwi-dht22", "id": "dht1", "top": 9.9, "left": 167.4, "attrs": {} },
+      { "type": "wokwi-dht", "id": "dht2", "top": -38.1, "left": -139.8, "attrs": {} },
+      { "type": "wokwi-mpu6050", "id": "imu1", "top": -63.38, "left": -189.68, "attrs": {} },
+      { "type": "board-ds18b20", "id": "temp1", "top": -87.53, "left": 80.88, "attrs": {} },
+      { "type": "wokwi-pir-motion-sensor", "id": "pir1", "top": 90.4, "left": -151.38, "attrs": {} }
+    ],
+    "connections": [ [ "esp:TX", "$serialMonitor:RX", "", [] ], [ "esp:RX", "$serialMonitor:TX", "", [] ] ],
+    "dependencies": {}
+  }
