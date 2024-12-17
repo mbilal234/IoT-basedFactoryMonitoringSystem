@@ -130,6 +130,8 @@ void loop() {
   Serial.println("Motor 1 Speed: " + String(100-delaySpeed) + " RPM");
   
   Serial.println("---");
+  Serial.println("---");
+
 
   // Send data to ThingSpeak
   if (WiFi.status() == WL_CONNECTED) {
