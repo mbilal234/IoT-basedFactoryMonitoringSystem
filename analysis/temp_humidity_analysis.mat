@@ -4,9 +4,7 @@ readChannelID = 2756953;
 fieldID1 = 1; % Field ID for the first variable
 fieldID2 = 2; % Field ID for the second variable
 
-% Channel Read API Key 
-% If your channel is private, then enter the read API
-% Key between the '' below: 
+
 readAPIKey = 'W4L8U0LNUD0KSB2T';
 
 %% Read Data %%
