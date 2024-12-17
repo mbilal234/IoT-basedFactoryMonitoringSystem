@@ -1,6 +1,5 @@
 
 % Prior to running this MATLAB code template, assign the channel variables.
-% Set 'readChannelID' to the channel ID of the channel to read from. 
 % Also, assign the read field IDs to the variables 'fieldID1', and 'fieldID2'. 
 
 % TODO - Replace the [] with channel ID to read data from:
