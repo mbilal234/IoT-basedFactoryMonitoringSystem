@@ -1,6 +1,5 @@
 
 
-% TODO - Replace the [] with channel ID to read data from:
 readChannelID = 2756953;
 % TODO - Replace the [] with the Field ID to read data from:
 fieldID1 = 1; % Field ID for the first variable
