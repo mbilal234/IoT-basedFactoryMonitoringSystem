@@ -5,6 +5,8 @@
 #include <Adafruit_Sensor.h>
 #include "DHTesp.h"
 #include <Stepper.h> // Stepper motor library
+#include <Arduino.h>
+
 #define MOTOR1_PIN 19
 #define MOTOR2_PIN 2
 
@@ -32,6 +34,114 @@ const int stepsPerRevolution = 200;
 Stepper stepper1(stepsPerRevolution, 18, 19, 21, 22); // Motor 1 pins
 Stepper stepper2(stepsPerRevolution, 13, 12, 14, 27); // Motor 2 pins
 int delaySpeed = 10;
+
+void Task1(void *pvParameters) {
+  while (true) {
+    Serial.println("Task 1 running on Core: " + String(xPortGetCoreID()));
+    // Read data from PIR sensor
+  int motion = digitalRead(PIR_PIN);
+
+  // Read data from MPU6050
+  sensors_event_t accel, gyro, temp;
+  mpu.getEvent(&accel, &gyro, &temp);
+
+  // Control LED based on motion
+  if (motion == HIGH) {
+    digitalWrite(LED_PIN, HIGH); // Turn LED on
+  } else {
+    digitalWrite(LED_PIN, LOW); // Turn LED off
+  }
+  TempAndHumidity dhtData = dhtSensor.getTempAndHumidity();
+  float temperature = dhtData.temperature;
+  float humidity = dhtData.humidity;
+
+  
+  // Log sensor readings to the Serial Monitor
+  Serial.println("Temperature: " + String(temperature) + "°C");
+  Serial.println("Humidity: " + String(humidity) + "%");
+  Serial.println("Motion: " + String(motion));
+  Serial.println("Accel X: " + String(accel.acceleration.x));
+  Serial.println("Accel Y: " + String(accel.acceleration.y));
+  Serial.println("Accel Z: " + String(accel.acceleration.z));
+  Serial.println("Motor 1 Speed: " + String(100-delaySpeed) + " RPM");
+  
+  Serial.println("---");
+
+  // Send data to ThingSpeak
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String url = String(server) + "?api_key=" + apiKey +
+                 "&field1=" + String(temperature) +         // Field 1: Temperature
+                 "&field2=" + String(humidity) +            // Field 2: Humidity
+                 "&field3=" + String(motion) +              // Field 3: Motion detected
+                 "&field4=" + String(accel.acceleration.x) + // Field 4: Acceleration X
+                 "&field5=" + String(accel.acceleration.y) + // Field 5: Acceleration Y
+                 "&field6=" + String(accel.acceleration.z);  // Field 6: Acceleration Z
+
+    http.begin(url);
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+      Serial.print("ThingSpeak Response: ");
+      Serial.println(httpResponseCode);
+    } else {
+      Serial.print("Error sending data to ThingSpeak: ");
+      Serial.println(http.errorToString(httpResponseCode));
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected!");
+  }
+
+  }
+  // Enter light sleep for 15 seconds
+  esp_sleep_enable_timer_wakeup(15000000); // Time in microseconds
+  Serial.println("Entering light sleep for 15 seconds...");
+  esp_light_sleep_start();
+  Serial.println("Woke up from light sleep!");
+}
+
+void Task2(void *pvParameters) {
+  while (true) {
+    Serial.println("Task 2 running on Core: " + String(xPortGetCoreID()));
+    // Read data from DHT22
+  
+  for (int i = 0; i < 200; i++) {
+    digitalWrite(MOTOR1_PIN, HIGH);
+    digitalWrite(MOTOR1_PIN, LOW);
+    TempAndHumidity dhtData = dhtSensor.getTempAndHumidity();
+  float temperature = dhtData.temperature;
+
+  delaySpeed = temperature == 0 ? 50:400/temperature;
+  
+  if (delaySpeed < 5 && delaySpeed>0){
+    delaySpeed = 5;
+  }
+  if (delaySpeed > 50 || delaySpeed<0){
+    delaySpeed = 50;
+  }
+    delay(delaySpeed);
+  }
+  for (int i = 0; i < 200; i++) {
+    digitalWrite(MOTOR2_PIN, HIGH);
+    digitalWrite(MOTOR2_PIN, LOW);
+    TempAndHumidity dhtData = dhtSensor.getTempAndHumidity();
+  float temperature = dhtData.temperature;
+
+  delaySpeed = temperature == 0 ? 50:400/temperature;
+  
+  if (delaySpeed < 5 && delaySpeed>0){
+    delaySpeed = 5;
+  }
+  if (delaySpeed > 50 || delaySpeed<0){
+    delaySpeed = 50;
+  }
+    delay(delaySpeed);
+  }
+  
+  }
+}
+
 
 void setup() {
 
@@ -74,91 +184,32 @@ void setup() {
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
   
+
+  // Create Task1 on Core 1
+  xTaskCreatePinnedToCore(
+      Task1,    // Function to execute
+      "Task1",  // Name of the task
+      10000,    // Stack size in bytes
+      NULL,     // Task input parameter
+      1,        // Priority of the task
+      NULL,     // Task handle
+      1);       // Core 1
+
+  // Create Task2 on Core 0
+  xTaskCreatePinnedToCore(
+      Task2,    // Function to execute
+      "Task2",  // Name of the task
+      10000,    // Stack size in bytes
+      NULL,     // Task input parameter
+      1,        // Priority of the task
+      NULL,     // Task handle
+      0);       // Core 0
+
 }
 
+
+
+
 void loop() {
-  // Read data from DHT22
-  
-  for (int i = 0; i < 200; i++) {
-    digitalWrite(MOTOR1_PIN, HIGH);
-    digitalWrite(MOTOR1_PIN, LOW);
-    delay(delaySpeed);
-  }
-  for (int i = 0; i < 200; i++) {
-    digitalWrite(MOTOR2_PIN, HIGH);
-    digitalWrite(MOTOR2_PIN, LOW);
-    delay(delaySpeed);
-  }
-  TempAndHumidity dhtData = dhtSensor.getTempAndHumidity();
-  float temperature = dhtData.temperature;
-  float humidity = dhtData.humidity;
-
-  delaySpeed = temperature == 0 ? 50:400/temperature;
-  
-  if (delaySpeed < 5 && delaySpeed>0){
-    delaySpeed = 5;
-  }
-  if (delaySpeed > 50 || delaySpeed<0){
-    delaySpeed = 50;
-  }
-
-  // // Rotate motors continuously
-  // stepper1.step(stepsPerRevolution);
-  // stepper2.step(stepsPerRevolution);
-
-  // Read data from PIR sensor
-  int motion = digitalRead(PIR_PIN);
-
-  // Read data from MPU6050
-  sensors_event_t accel, gyro, temp;
-  mpu.getEvent(&accel, &gyro, &temp);
-
-  // Control LED based on motion
-  if (motion == HIGH) {
-    digitalWrite(LED_PIN, HIGH); // Turn LED on
-  } else {
-    digitalWrite(LED_PIN, LOW); // Turn LED off
-  }
-  
-  // Log sensor readings to the Serial Monitor
-  Serial.println("Temperature: " + String(temperature) + "°C");
-  Serial.println("Humidity: " + String(humidity) + "%");
-  Serial.println("Motion: " + String(motion));
-  Serial.println("Accel X: " + String(accel.acceleration.x));
-  Serial.println("Accel Y: " + String(accel.acceleration.y));
-  Serial.println("Accel Z: " + String(accel.acceleration.z));
-  Serial.println("Motor 1 Speed: " + String(100-delaySpeed) + " RPM");
-  
-  Serial.println("---");
-  Serial.println("---");
-
-
-  // Send data to ThingSpeak
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    String url = String(server) + "?api_key=" + apiKey +
-                 "&field1=" + String(temperature) +         // Field 1: Temperature
-                 "&field2=" + String(humidity) +            // Field 2: Humidity
-                 "&field3=" + String(motion) +              // Field 3: Motion detected
-                 "&field4=" + String(accel.acceleration.x) + // Field 4: Acceleration X
-                 "&field5=" + String(accel.acceleration.y) + // Field 5: Acceleration Y
-                 "&field6=" + String(accel.acceleration.z);  // Field 6: Acceleration Z
-
-    http.begin(url);
-    int httpResponseCode = http.GET();
-
-    if (httpResponseCode > 0) {
-      Serial.print("ThingSpeak Response: ");
-      Serial.println(httpResponseCode);
-    } else {
-      Serial.print("Error sending data to ThingSpeak: ");
-      Serial.println(http.errorToString(httpResponseCode));
-    }
-    http.end();
-  } else {
-    Serial.println("WiFi not connected!");
-  }
-
-
-
+  // The loop can remain empty if tasks handle everything
 }
