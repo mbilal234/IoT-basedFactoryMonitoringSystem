@@ -1,0 +1,45 @@
+% Template MATLAB code for visualizing data using the YYAXIS and PLOT functions.
+
+% Prior to running this MATLAB code template, assign the channel variables.
+% Set 'readChannelID' to the channel ID of the channel to read from. 
+% Also, assign the read field IDs to the variables 'fieldID1', and 'fieldID2'. 
+
+% TODO - Replace the [] with channel ID to read data from:
+readChannelID = 2756953;
+% TODO - Replace the [] with the Field ID to read data from:
+fieldID1 = 1; % Field ID for the first variable
+fieldID2 = 2; % Field ID for the second variable
+
+% Channel Read API Key 
+% If your channel is private, then enter the read API
+% Key between the '' below: 
+readAPIKey = 'W4L8U0LNUD0KSB2T';
+
+%% Read Data %%
+
+% Read first data variable
+[data1, time1] = thingSpeakRead(readChannelID, 'Field', fieldID1, 'NumPoints', 30, 'ReadKey', readAPIKey);
+
+% Read second data variable
+[data2, time2] = thingSpeakRead(readChannelID, 'Field', fieldID2, 'NumPoints', 30, 'ReadKey', readAPIKey);
+
+%% Visualize Data %%
+
+% Set up the figure
+figure;
+
+% Plot the first data variable on the left y-axis
+yyaxis left;
+plot(time1, data1, '-o', 'LineWidth', 1.5, 'DisplayName', 'Temperature');
+ylabel('Temperature (Celsius)'); % Replace 'Unit 1' with the appropriate unit
+xlabel('Time');
+grid on;
+
+% Plot the second data variable on the right y-axis
+yyaxis right;
+plot(time2, data2, '-s', 'LineWidth', 1.5, 'DisplayName', 'Humidity');
+ylabel('Humidity (%)'); % Replace 'Unit 2' with the appropriate unit
+
+% Add title and legend
+title('Visualization of Variables from ThingSpeak Channel');
+legend('show');
