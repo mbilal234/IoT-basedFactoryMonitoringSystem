@@ -116,8 +116,10 @@ void loop() {
   display.display();
   delay(1500);
   display.clearDisplay();
+
  
   ec.calibration(voltage, temperature); // calibration process by Serail CMD
   
   
 }
+
