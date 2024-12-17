@@ -1,5 +1,4 @@
 
-% Also, assign the read field IDs to the variables 'fieldID1', and 'fieldID2'. 
 
 % TODO - Replace the [] with channel ID to read data from:
 readChannelID = 2756953;
