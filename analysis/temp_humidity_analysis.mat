@@ -1,4 +1,3 @@
-% Template MATLAB code for visualizing data using the YYAXIS and PLOT functions.
 
 % Prior to running this MATLAB code template, assign the channel variables.
 % Set 'readChannelID' to the channel ID of the channel to read from. 
